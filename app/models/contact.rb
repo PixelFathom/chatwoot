@@ -63,7 +63,7 @@ class Contact < ApplicationRecord
   after_create_commit :dispatch_create_event, :ip_lookup
   after_update_commit :dispatch_update_event
   after_destroy_commit :dispatch_destroy_event
-  before_save :sync_contact_attributes
+  before_save :sync_contact_attributes, :update_is_verified
 
   enum contact_type: { visitor: 0, lead: 1, customer: 2 }
 
@@ -176,7 +176,7 @@ class Contact < ApplicationRecord
   end
 
   def self.resolved_contacts
-    where("contacts.email <> '' OR contacts.phone_number <> '' OR contacts.identifier <> ''")
+    where(is_verified: true)
   end
 
   def discard_invalid_attrs
@@ -237,5 +237,18 @@ class Contact < ApplicationRecord
 
   def dispatch_destroy_event
     Rails.configuration.dispatcher.dispatch(CONTACT_DELETED, Time.zone.now, contact: self)
+  end
+
+  # Check if contact has verification data (email, phone, identifier, or company_name)
+  def contact_verified?
+    email.present? || 
+    phone_number.present? || 
+    identifier.present? || 
+    (additional_attributes.present? && additional_attributes['company_name'].present?)
+  end
+
+  # Update is_verified column based on contact verification status
+  def update_is_verified
+    self.is_verified = contact_verified?
   end
 end
