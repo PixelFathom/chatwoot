@@ -141,6 +141,18 @@ export const LOCALE_MENU_ITEMS = [
     icon: 'i-lucide-star',
   },
   {
+    label: 'HELP_CENTER.LOCALES_PAGE.LOCALE_CARD.DROPDOWN_MENU.ENABLE',
+    action: 'enable',
+    value: 'enable',
+    icon: 'i-lucide-eye',
+  },
+  {
+    label: 'HELP_CENTER.LOCALES_PAGE.LOCALE_CARD.DROPDOWN_MENU.DISABLE',
+    action: 'disable',
+    value: 'disable',
+    icon: 'i-lucide-eye-off',
+  },
+  {
     label: 'HELP_CENTER.LOCALES_PAGE.LOCALE_CARD.DROPDOWN_MENU.DELETE',
     action: 'delete',
     value: 'delete',

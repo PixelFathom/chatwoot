@@ -27,19 +27,31 @@ const isLocaleDefault = code => {
   return props.portal?.meta?.default_locale === code;
 };
 
+const isLocaleDisabled = code => {
+  const disabledLocales = props.portal?.meta?.disabled_locales || [];
+  return disabledLocales.includes(code);
+};
+
 const updatePortalLocales = async ({
   newAllowedLocales,
   defaultLocale,
+  disabledLocales,
   messageKey,
 }) => {
   let alertMessage = '';
   try {
+    const config = {
+      default_locale: defaultLocale,
+      allowed_locales: newAllowedLocales,
+    };
+
+    if (disabledLocales !== undefined) {
+      config.disabled_locales = disabledLocales;
+    }
+
     await store.dispatch('portals/update', {
       portalSlug: props.portal.slug,
-      config: {
-        default_locale: defaultLocale,
-        allowed_locales: newAllowedLocales,
-      },
+      config,
     });
 
     alertMessage = t(`HELP_CENTER.PORTAL.${messageKey}.API.SUCCESS_MESSAGE`);
@@ -98,11 +110,53 @@ const deletePortalLocale = async ({ localeCode }) => {
   });
 };
 
+const enableLocale = async ({ localeCode }) => {
+  const currentDisabledLocales = props.portal.meta.disabled_locales || [];
+  const newDisabledLocales = currentDisabledLocales.filter(code => code !== localeCode);
+  const newAllowedLocales = props.locales.map(locale => locale.code);
+  const defaultLocale = props.portal.meta.default_locale;
+
+  await updatePortalLocales({
+    newAllowedLocales,
+    defaultLocale,
+    disabledLocales: newDisabledLocales,
+    messageKey: 'ENABLE_LOCALE',
+  });
+
+  useTrack(PORTALS_EVENTS.ENABLE_LOCALE, {
+    enabledLocale: localeCode,
+    from: route.name,
+  });
+};
+
+const disableLocale = async ({ localeCode }) => {
+  const currentDisabledLocales = props.portal.meta.disabled_locales || [];
+  const newDisabledLocales = [...currentDisabledLocales, localeCode];
+  const newAllowedLocales = props.locales.map(locale => locale.code);
+  const defaultLocale = props.portal.meta.default_locale;
+
+  await updatePortalLocales({
+    newAllowedLocales,
+    defaultLocale,
+    disabledLocales: newDisabledLocales,
+    messageKey: 'DISABLE_LOCALE',
+  });
+
+  useTrack(PORTALS_EVENTS.DISABLE_LOCALE, {
+    disabledLocale: localeCode,
+    from: route.name,
+  });
+};
+
 const handleAction = ({ action }, localeCode) => {
   if (action === 'change-default') {
     changeDefaultLocale({ localeCode: localeCode });
   } else if (action === 'delete') {
     deletePortalLocale({ localeCode: localeCode });
+  } else if (action === 'enable') {
+    enableLocale({ localeCode: localeCode });
+  } else if (action === 'disable') {
+    disableLocale({ localeCode: localeCode });
   }
 };
 </script>
@@ -114,6 +168,7 @@ const handleAction = ({ action }, localeCode) => {
       :key="index"
       :locale="locale.name"
       :is-default="isLocaleDefault(locale.code)"
+      :is-disabled="isLocaleDisabled(locale.code)"
       :locale-code="locale.code"
       :article-count="locale.articlesCount || 0"
       :category-count="locale.categoriesCount || 0"

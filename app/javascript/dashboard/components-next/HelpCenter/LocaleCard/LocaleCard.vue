@@ -17,6 +17,10 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  isDisabled: {
+    type: Boolean,
+    default: false,
+  },
   localeCode: {
     type: String,
     required: true,
@@ -38,10 +42,15 @@ const { t } = useI18n();
 const [showDropdownMenu, toggleDropdown] = useToggle();
 
 const localeMenuItems = computed(() =>
-  LOCALE_MENU_ITEMS.map(item => ({
+  LOCALE_MENU_ITEMS.filter(item => {
+    // Filter out enable/disable based on current state
+    if (item.action === 'enable' && !props.isDisabled) return false;
+    if (item.action === 'disable' && (props.isDisabled || props.isDefault)) return false;
+    return true;
+  }).map(item => ({
     ...item,
     label: t(item.label),
-    disabled: props.isDefault,
+    disabled: props.isDefault && (item.action === 'delete' || item.action === 'disable'),
   }))
 );
 
@@ -55,7 +64,13 @@ const handleAction = ({ action, value }) => {
   <CardLayout>
     <div class="flex justify-between gap-2">
       <div class="flex items-center justify-start gap-2">
-        <span class="text-sm font-medium text-n-slate-12 line-clamp-1">
+        <span
+          class="text-sm font-medium line-clamp-1"
+          :class="{
+            'text-n-slate-12': !isDisabled,
+            'text-n-slate-8': isDisabled
+          }"
+        >
           {{ locale }} ({{ localeCode }})
         </span>
         <span
@@ -63,6 +78,12 @@ const handleAction = ({ action, value }) => {
           class="bg-n-alpha-2 h-6 inline-flex items-center justify-center rounded-md text-xs border-px border-transparent text-n-blue-text px-2 py-0.5"
         >
           {{ $t('HELP_CENTER.LOCALES_PAGE.LOCALE_CARD.DEFAULT') }}
+        </span>
+        <span
+          v-if="isDisabled && !isDefault"
+          class="bg-n-alpha-2 h-6 inline-flex items-center justify-center rounded-md text-xs border-px border-transparent text-n-slate-11 px-2 py-0.5"
+        >
+          {{ $t('HELP_CENTER.LOCALES_PAGE.LOCALE_CARD.DISABLED') }}
         </span>
       </div>
       <div class="flex items-center justify-end gap-4">

@@ -310,6 +310,18 @@
           "SUCCESS_MESSAGE": "Locale removed from portal successfully",
           "ERROR_MESSAGE": "Unable to remove locale from portal. Try again."
         }
+      },
+      "ENABLE_LOCALE": {
+        "API": {
+          "SUCCESS_MESSAGE": "Locale enabled successfully",
+          "ERROR_MESSAGE": "Unable to enable locale. Try again."
+        }
+      },
+      "DISABLE_LOCALE": {
+        "API": {
+          "SUCCESS_MESSAGE": "Locale disabled successfully",
+          "ERROR_MESSAGE": "Unable to disable locale. Try again."
+        }
       }
     },
     "TABLE": {
@@ -628,8 +640,11 @@
         "ARTICLES_COUNT": "{count} article | {count} articles",
         "CATEGORIES_COUNT": "{count} category | {count} categories",
         "DEFAULT": "Default",
+        "DISABLED": "Disabled",
         "DROPDOWN_MENU": {
           "MAKE_DEFAULT": "Make default",
+          "ENABLE": "Enable",
+          "DISABLE": "Disable",
           "DELETE": "Delete"
         }
       },

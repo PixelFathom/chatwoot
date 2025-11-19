@@ -40,10 +40,11 @@ class Portal < ApplicationRecord
   validates :slug, presence: true, uniqueness: true
   validates :custom_domain, uniqueness: true, allow_nil: true
   validate :config_json_format
+  validate :validate_default_locale_not_disabled
 
   scope :active, -> { where(archived: false) }
 
-  CONFIG_JSON_KEYS = %w[allowed_locales default_locale website_token].freeze
+  CONFIG_JSON_KEYS = %w[allowed_locales disabled_locales default_locale website_token].freeze
 
   def file_base_data
     {
@@ -61,11 +62,35 @@ class Portal < ApplicationRecord
     config['default_locale'] || 'en'
   end
 
+  def disabled_locales
+    config['disabled_locales'] || []
+  end
+
+  def enabled_locales
+    (config['allowed_locales'] || []) - disabled_locales
+  end
+
+  def is_locale_enabled?(locale)
+    return true if locale == default_locale # default locale is always enabled
+    allowed_locales = config['allowed_locales'] || []
+    disabled_locales = config['disabled_locales'] || []
+    allowed_locales.include?(locale) && !disabled_locales.include?(locale)
+  end
+
   private
 
   def config_json_format
     config['default_locale'] = default_locale
     denied_keys = config.keys - CONFIG_JSON_KEYS
     errors.add(:cofig, "in portal on #{denied_keys.join(',')} is not supported.") if denied_keys.any?
+  end
+
+  def validate_default_locale_not_disabled
+    disabled_locales_array = config['disabled_locales'] || []
+    default_locale_value = config['default_locale'] || 'en'
+
+    if disabled_locales_array.include?(default_locale_value)
+      errors.add(:config, 'Default locale cannot be disabled')
+    end
   end
 end
