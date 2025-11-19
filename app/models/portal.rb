@@ -70,11 +70,12 @@ class Portal < ApplicationRecord
     (config['allowed_locales'] || []) - disabled_locales
   end
 
-  def is_locale_enabled?(locale)
+  def locale_enabled?(locale)
     return true if locale == default_locale # default locale is always enabled
+
     allowed_locales = config['allowed_locales'] || []
     disabled_locales = config['disabled_locales'] || []
-    allowed_locales.include?(locale) && !disabled_locales.include?(locale)
+    allowed_locales.include?(locale) && disabled_locales.exclude?(locale)
   end
 
   private
@@ -89,8 +90,8 @@ class Portal < ApplicationRecord
     disabled_locales_array = config['disabled_locales'] || []
     default_locale_value = config['default_locale'] || 'en'
 
-    if disabled_locales_array.include?(default_locale_value)
-      errors.add(:config, 'Default locale cannot be disabled')
-    end
+    return unless disabled_locales_array.include?(default_locale_value)
+
+    errors.add(:config, 'Default locale cannot be disabled')
   end
 end

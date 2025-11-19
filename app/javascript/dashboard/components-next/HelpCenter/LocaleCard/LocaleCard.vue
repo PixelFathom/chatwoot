@@ -45,12 +45,15 @@ const localeMenuItems = computed(() =>
   LOCALE_MENU_ITEMS.filter(item => {
     // Filter out enable/disable based on current state
     if (item.action === 'enable' && !props.isDisabled) return false;
-    if (item.action === 'disable' && (props.isDisabled || props.isDefault)) return false;
+    if (item.action === 'disable' && (props.isDisabled || props.isDefault))
+      return false;
     return true;
   }).map(item => ({
     ...item,
     label: t(item.label),
-    disabled: props.isDefault && (item.action === 'delete' || item.action === 'disable'),
+    disabled:
+      props.isDefault &&
+      (item.action === 'delete' || item.action === 'disable'),
   }))
 );
 
@@ -68,7 +71,7 @@ const handleAction = ({ action, value }) => {
           class="text-sm font-medium line-clamp-1"
           :class="{
             'text-n-slate-12': !isDisabled,
-            'text-n-slate-8': isDisabled
+            'text-n-slate-8': isDisabled,
           }"
         >
           {{ locale }} ({{ localeCode }})

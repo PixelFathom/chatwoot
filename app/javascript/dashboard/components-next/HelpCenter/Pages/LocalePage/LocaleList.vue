@@ -112,7 +112,9 @@ const deletePortalLocale = async ({ localeCode }) => {
 
 const enableLocale = async ({ localeCode }) => {
   const currentDisabledLocales = props.portal.meta.disabled_locales || [];
-  const newDisabledLocales = currentDisabledLocales.filter(code => code !== localeCode);
+  const newDisabledLocales = currentDisabledLocales.filter(
+    code => code !== localeCode
+  );
   const newAllowedLocales = props.locales.map(locale => locale.code);
   const defaultLocale = props.portal.meta.default_locale;
 

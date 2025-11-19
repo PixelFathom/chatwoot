@@ -21,9 +21,9 @@ class Public::Api::V1::PortalsController < Public::Api::V1::Portals::BaseControl
     @locale = params[:locale] || @portal.default_locale
 
     # Redirect to default locale if requested locale is disabled
-    if params[:locale].present? && !@portal.is_locale_enabled?(params[:locale])
-      redirect_to "/hc/#{@portal.slug}/#{@portal.default_locale}" and return
-    end
+    return unless params[:locale].present? && !@portal.locale_enabled?(params[:locale])
+
+    redirect_to "/hc/#{@portal.slug}/#{@portal.default_locale}" and return
   end
 
   def redirect_to_portal_with_locale
