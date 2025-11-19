@@ -37,5 +37,65 @@ RSpec.describe Portal do
         expect(portal.custom_domain).to be_nil
       end
     end
+
+    context 'when dealing with disabled locales' do
+      it 'allows disabled_locales config key' do
+        portal.update(config: { 'allowed_locales': %w[en es], 'disabled_locales': ['es'] })
+        expect(portal).to be_valid
+      end
+
+      it 'prevents disabling the default locale' do
+        portal.update(config: { 'allowed_locales': ['en'], 'disabled_locales': ['en'], 'default_locale': 'en' })
+        expect(portal).not_to be_valid
+        expect(portal.errors[:config]).to include('Default locale cannot be disabled')
+      end
+
+      it 'allows disabling non-default locales' do
+        portal.update(config: { 'allowed_locales': %w[en es], 'disabled_locales': ['es'], 'default_locale': 'en' })
+        expect(portal).to be_valid
+      end
+    end
+  end
+
+  describe 'locale helper methods' do
+    let!(:account) { create(:account) }
+    let!(:portal) do
+      create(:portal, account_id: account.id, config: { 'allowed_locales' => %w[en es fr], 'disabled_locales' => ['es'], 'default_locale' => 'en' })
+    end
+
+    describe '#disabled_locales' do
+      it 'returns disabled locales from config' do
+        expect(portal.disabled_locales).to eq(['es'])
+      end
+
+      it 'returns empty array when no disabled locales' do
+        portal.update(config: { 'allowed_locales' => ['en'] })
+        expect(portal.disabled_locales).to eq([])
+      end
+    end
+
+    describe '#enabled_locales' do
+      it 'returns allowed locales minus disabled locales' do
+        expect(portal.enabled_locales).to eq(%w[en fr])
+      end
+    end
+
+    describe '#locale_enabled?' do
+      it 'returns true for default locale regardless of disabled status' do
+        expect(portal.locale_enabled?('en')).to be true
+      end
+
+      it 'returns false for disabled locales' do
+        expect(portal.locale_enabled?('es')).to be false
+      end
+
+      it 'returns true for enabled non-default locales' do
+        expect(portal.locale_enabled?('fr')).to be true
+      end
+
+      it 'returns false for locales not in allowed_locales' do
+        expect(portal.locale_enabled?('de')).to be false
+      end
+    end
   end
 end
