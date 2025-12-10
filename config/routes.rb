@@ -347,6 +347,15 @@ Rails.application.routes.draw do
             end
           end
         end
+
+        # System-level routes for administration
+        namespace :system do
+          resources :logs, only: [] do
+            collection do
+              post :export
+            end
+          end
+        end
       end
     end
 

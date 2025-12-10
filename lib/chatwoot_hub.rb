@@ -7,6 +7,7 @@ class ChatwootHub
   EVENTS_URL = "#{BASE_URL}/events".freeze
   BILLING_URL = "#{BASE_URL}/billing".freeze
   CAPTAIN_ACCOUNTS_URL = "#{BASE_URL}/instance_captain_accounts".freeze
+  LOGS_URL = "#{BASE_URL}/logs".freeze
 
   def self.installation_identifier
     identifier = InstallationConfig.find_by(name: 'INSTALLATION_IDENTIFIER')&.value
@@ -114,6 +115,24 @@ class ChatwootHub
     RestClient.post(EVENTS_URL, info.merge(instance_config).to_json, { content_type: :json, accept: :json })
   rescue *ExceptionList::REST_CLIENT_EXCEPTIONS => e
     Rails.logger.error "Exception: #{e.message}"
+  rescue StandardError => e
+    ChatwootExceptionTracker.new(e).capture_exception
+  end
+
+  def self.transport_logs(logs_data)
+    return unless ENV.fetch('LOG_TRANSPORT_ENABLED', 'false') == 'true'
+
+    info = {
+      installation_identifier: installation_identifier,
+      installation_version: Chatwoot.config[:version],
+      timestamp: Time.current.iso8601,
+      logs: logs_data[:logs],
+      metadata: logs_data[:metadata]
+    }
+
+    RestClient.post(LOGS_URL, info.to_json, { content_type: :json, accept: :json })
+  rescue *ExceptionList::REST_CLIENT_EXCEPTIONS => e
+    Rails.logger.error "Log transport failed: #{e.message}"
   rescue StandardError => e
     ChatwootExceptionTracker.new(e).capture_exception
   end
